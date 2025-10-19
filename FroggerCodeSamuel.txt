@@ -1,0 +1,1329 @@
+    -- flag 1   --- newlevel (tiles 194, 195, 157, 10, 11, 12, 13)
+    -- flag 2   --- from menu to level 0 (tiles 209, 210, 211)
+    -- flag 3   --- water
+    -- flag 4   --- wall
+    -- flag 5   --- floor (for time in water) 
+    -- flag 7   --- spikes
+    -- tile 140 --- invisible wall
+    -- tile 157 --- invisible newLevel (flag 1)
+    -- tile 208 --- secret
+    -- tile 255 --- level test
+    
+    init_posX =  0
+    init_posXY =  0
+    move_x = init_posX
+    move_y = init_posXY
+    move_x4 = move_x+13 --x4        are the second point use for player's collisions
+    move_y4 = move_y+3 --    and y4
+    move_unit = 1
+    i = 0
+    i_max = 2 -- if = 1 so speed*2
+    
+    image_posX = 14*8
+    image_posY = 12*8
+    levelTileX = 0
+    levelTileY = 0
+    camera_x = 0
+    camera_y = 0
+    canMoveHorizontal = false
+    classicLevel = false -- check if camera should follow the player or not
+    levelChange = 100
+    level = 0
+    l = 100
+    levelImmediateChange = true
+    gameOverMan = false
+    
+    health = 10
+    h = 0
+    showHP = true
+    isBonusHealth = true
+    score = 500
+    score_posX = 0
+    score_posY = 10
+    scoreMinus = 0
+    scoreColor = 14
+    sc = 0
+    isScore = false
+    fScore = true
+    ts = 0
+    titleShow = true
+    fString = false
+    p = 0
+    isSecret = true
+
+    a = 0 -- animation
+    anim = 408
+    idle = 0
+    miror = 0
+    isMoving = 0
+    moveNumber = 0
+    
+    isBoost = false
+    canBoost = true
+    isBoostDuration = false
+    isTimerBetweenBoost = false
+    i_boost = 0
+    i_betweenBoost = 0
+    ab = 0
+    animBoost = 448
+    animBoostRight = true
+    boostUsed = false
+
+    initAll = true
+    initWoodEasy = true
+    initWoodMedium = true
+    w = 0
+    wood = {wood_posX = 0, wood_posY = 0, sprite = 0}
+    wood_posX = -20
+    wood_posY = 7*8
+    isSafe0 = false     isSafe1 = false     isSafe2 = false     isSafe3 = false     isSafe4 = false     isSafe5 = false
+    isOn0 = false       isOn1 = false       isOn2 = false       isOn3 = false       isOn4 = false       isOn5 = false
+    c = 0
+
+    initObstacleMedium = false
+    initObstacleEasy = false
+    ib = 0
+    bullet = {coordX=0, coordY=0, obstacleSpeed=0, obstacleSprite=0, obstacleRotation=0}
+    spaceX = 0
+    spaceY = 0
+    r = 0 -- bullet rotation
+    waitB = 0
+    waitEnough = true
+    waitEnough2 = true
+    isObstacleMediumCollide = false
+    isObstacleEasyCollide = false
+
+    s = 0 -- spike
+    spikeX = 0
+    spikeY = 0
+    spikeAnim0 = 0    spikeAnim1 = 0    spikeAnim2 = 0    spikeAnim3 = 0
+    spx = 0
+    spy = 0
+    o = 0
+
+    ---------------------------------------- Player Animation --------------------------------------
+    function AnimFront()
+        -- to be sure to not doing multiple animations at the time --
+        if btn(0) then
+            isMoving = 0
+        end
+        if btn(0) and btn(2) then
+            isMoving = 0
+        end
+        if btn(0) and btn(3) then
+            isMoving = 0
+        end
+        if btn(1) then
+            isMoving = 1
+        end
+        if btn(1) and btn(2) and not btn(0) then
+            isMoving = 2
+        end
+        if btn(2) and not btn(0) then
+            isMoving = 2
+        end
+        if btn(1) and btn(3) and not btn(0) then
+            isMoving = 3
+        end
+        if btn(3) and not btn(0) then
+            isMoving = 3
+        end
+
+        if btn(0) and isMoving==0 then
+            a = a+1
+            miror = 0
+            idle = 0
+            if a >= 6   then anim = 372
+            end
+            if a >= 12  then anim = 374
+            end
+            if a >= 18  then anim = 376
+            end
+            if a >= 24  then anim = 378
+                a = 0
+            end
+        else if idle == 0 then anim = 380
+        end end
+
+        if btn(1) and isMoving==1 then
+            a = a+1
+            miror = 0
+            idle = 1
+            if a >= 6   then anim = 408
+            end
+            if a >= 12  then  anim = 410
+                a = 0
+            end
+        else if idle == 1 then anim = 412
+        end end
+
+        if btn(2) and isMoving==2 then
+            a = a+1
+            miror = 1
+            idle = 2
+            if a >= 6   then anim = 402
+            end
+            if a >= 12  then anim = 404
+                a = 0
+            end
+        else if idle == 2 then anim = 400
+        end end
+
+        if btn(3) and isMoving==3 then
+            a = a+1
+            miror = 0
+            idle = 3
+            if a >= 6   then anim = 402
+            end
+            if a >= 12  then anim = 404
+                a = 0
+            end
+        else if idle == 3 then anim = 400
+        end end        
+    end
+    
+    ----------------------------------------- Boost, and leave animation -----------------------
+    function Boost()
+        if isBoost == true then
+            i_max = 1
+        end
+        if keyp(24) and canBoost == true then
+            isBoost = true
+            canBoost = false
+            boostUsed = true
+            isBoostDuration = true
+        end
+        if isBoostDuration == true then
+            i_boost = i_boost+1        
+            if i_boost >= 40 then -- boost last 2/3second
+                i_boost = 0
+                isBoost = false
+                i_max = 2
+                isTimerBetweenBoost = true
+                isBoostDuration = false
+            end
+        end
+        if isTimerBetweenBoost == true then
+            i_betweenBoost = i_betweenBoost+1        
+            if i_betweenBoost >= 65 then -- time elapsed between two boosts
+                i_betweenBoost = 0
+                canBoost = true
+                boostUsed = false
+                isTimerBetweenBoost = false
+            end
+        end
+
+        ---------- Boost animation ----------
+        if animBoostRight == true then
+            ab = ab+1
+            if ab >= 10 then
+                ab = 0
+                animBoost = animBoost+2
+                if animBoost == 456 then
+                    animBoostRight = false
+                end
+            end  
+        end
+        if animBoostRight == false then
+            ab = ab+1
+            if ab >= 10 then
+                ab = 0
+                animBoost = animBoost-2
+                if animBoost == 448 then
+                    animBoostRight = true
+                end
+            end  
+        end
+        if boostUsed == false then
+            spr(animBoost, 220, 5, 0, 1, 0, 0, 2, 2)
+        end
+    end
+
+    ---------------------------------------- Movement --------------------------------------
+    function TenTimes()
+        i = i+1
+        if i >= i_max then
+            Movement(0.2, 0.1, 0.5, 1.8, 1.7)
+            i = 0
+        end
+    end
+
+    function Movement(littleCollision, veryLittleCollison, smallCollision, veryBigCollision, bigCollision)
+        -- here divided pixels
+        if btn(0) and   fget(mget(move_x/8, move_y/8-veryLittleCollison), 4)==false     and fget(mget(move_x4/8, move_y4/8-smallCollision), 4)==false then
+            move_y = move_y-move_unit
+        end
+        if btn(1) and   fget(mget(move_x/8, move_y/8+smallCollision), 4)==false         and fget(mget(move_x4/8, move_y4/8+littleCollision), 4)==false then
+            move_y = move_y+move_unit
+        end
+        if canMoveHorizontal == true then
+            if btn(2) and   fget(mget(move_x/8-veryLittleCollison, move_y/8), 4)==false     and fget(mget(move_x4/8-bigCollision, move_y4/8), 4)==false then                          
+                move_x = move_x-move_unit
+            end
+            if btn(3) and   fget(mget(move_x/8+veryBigCollision, move_y/8), 4)==false       and fget(mget(move_x4/8+littleCollision, move_y4/8), 4)==false then
+                move_x = move_x+move_unit
+            end
+        end
+    end
+
+    -------------------------------- Collide ----------------------------------
+    function Collide(flag, smallCollision, bigCollision)
+        -- here true pixels divided by at 8 at the same moment that the division of the coordonates by 8, unlike higher in Movement
+        if  fget(mget(move_x/8, move_y/8), flag)==true                           or fget(mget(move_x4/8, (move_y4-smallCollision)/8), flag)==true
+        or
+            fget(mget(move_x/8, (move_y+smallCollision)/8), flag)==true          or fget(mget(move_x4/8, move_y4/8), flag)==true
+        or
+            fget(mget(move_x/8, move_y/8), flag)==true                           or fget(mget((move_x4-bigCollision)/8, move_y4/8), flag)==true                      
+        or
+            fget(mget((move_x+bigCollision)/8, move_y/8), flag)==true           or fget(mget(move_x4/8, move_y4/8), flag)==true
+        then
+            move_x = (14+30*7)*8+1 -- just to be sure not collide multiple frames before teleporting
+            move_y = (8+17*7)*8+12 --just to teleportate immediatly and not collide continuously
+            levelChange = levelChange+1
+            levelImmediateChange = true
+        end
+    end
+
+    function CollideStart(flag, smallCollision, bigCollision)
+        if  fget(mget(move_x/8, move_y/8), flag)==true                           or fget(mget(move_x4/8, (move_y4-smallCollision)/8), flag)==true
+        or
+            fget(mget(move_x/8, (move_y+smallCollision)/8), flag)==true          or fget(mget(move_x4/8, move_y4/8), flag)==true
+        or
+            fget(mget(move_x/8, move_y/8), flag)==true                           or fget(mget((move_x4-bigCollision)/8, move_y4/8), flag)==true                      
+        or
+            fget(mget((move_x+bigCollision)/8, move_y/8), flag)==true           or fget(mget(move_x4/8, move_y4/8), flag)==true
+        then
+            move_x = (14+30*7)*8+1
+            move_y = (8+17*7)*8+12
+            levelChange = 0
+            levelImmediateChange = true
+        end
+    end
+
+    ------------------------------------ Hit ----------------------------------
+    function Hit()
+        ---- bullets ----
+        if classicLevel == true and isObstacleMediumCollide == true or isObstacleEasyCollide == true then
+            for ib = 0, 8 do
+                if  move_x >= bullet[ib].coordX+levelTileX          and move_x <= bullet[ib].coordX+levelTileX+16-1 and -- check if player is in the
+                    move_y >=  bullet[ib].coordY+levelTileY         and move_y <=  bullet[ib].coordY+levelTileY+16-1    -- zone between the two tips of
+                    then LittleFunctionHit()                                                                           -- the obstacle
+                end
+                if  move_x >= bullet[ib].coordX+levelTileX          and move_x <= bullet[ib].coordX+levelTileX+16-1 and
+                    move_y+0.5*8 >=  bullet[ib].coordY+levelTileY+1 and move_y+0.5*8 <=  bullet[ib].coordY+levelTileY+16
+                    then LittleFunctionHit()
+                end
+                if  move_x4 >= bullet[ib].coordX+levelTileX         and move_x4 <= bullet[ib].coordX+levelTileX+16  and
+                    move_y4-0.5*8 >=  bullet[ib].coordY+levelTileY  and move_y4-0.5*8 <=  bullet[ib].coordY+levelTileY+16-2
+                    then LittleFunctionHit()
+                end
+                if  move_x4 >= bullet[ib].coordX+levelTileX         and move_x4 <= bullet[ib].coordX+levelTileX+16  and 
+                    move_y4 >=  bullet[ib].coordY+levelTileY        and move_y4 <=  bullet[ib].coordY+levelTileY+16
+                    then LittleFunctionHit()
+                end
+            end
+        end
+        ---- spikes ----
+        if fget(mget(move_x/8, move_y/8), 7)==true or fget(mget(move_x4/8, move_y4/8), 7)==true then
+            LittleFunctionHit()
+        end
+    end
+
+    ------------------------------------ Health ----------------------------------
+    function LittleFunctionHit()
+        timerHealth = true
+        if health >= 2 then -- condition for not go back at the begining of the level right before going to game over
+            levelImmediateChange = true
+        end
+    end
+
+    function TimerHealth() -- to not be hit multiples times before teleporting at the start of the level
+        if timerHealth == true then
+            h = h+1
+            if h >= 5 then
+                health = health - 1
+                h = 0
+                score = score-50
+                timerHealth = false
+            end
+        end
+    end
+
+    ------------------------------------ Spikes ----------------------------------
+    function Spike()
+        s = s+1
+        if s >= 126 then -- cycle of up and down spikes every 126 frames
+            s = 0
+        end
+        --line 1
+        for spx = 11, 16 do
+            SpikeAnim(spx, 7, 224, 225, 226, 227)
+        end
+        --line 2
+        for spx = 11, 16 do
+            SpikeAnim(spx, 8, 240, 241, 242, 243)
+        end
+    end
+
+    function SpikeLevel1()
+        -- right
+        for spy = 108, 110 do
+            for spx = 84, 88 do
+                SpikeAnim(spx, spy, 240, 241, 242, 243)        
+            end
+        end
+        -- middle diagonale
+        space = 0
+        spmax = 81
+        for spy = 104, 105 do
+            for spx = 77, spmax do
+                SpikeAnim(spx, spy+space, 240, 241, 242, 243)
+                space = space+1   
+                if space == 5 then
+                    space = 0
+                    spmax = 80
+                end
+            end
+        end
+        -- left diagonale
+        o = 0
+        spacex = 0
+        spacey = 0
+        spxmax = 65
+        for i = 0, 5 do
+            for spx = 64+spacex, spxmax+spacex do
+                SpikeAnim(spx, 114-spacey, 224, 225, 226, 227)
+                o = o+1
+                if o==2 then
+                    spacex = spacex+1
+                    spacey = spacey+1
+                    o = 0
+                end
+                if i == 4 then spxmax = 64
+                --spacex = spacex+1
+                end
+            end
+        end
+        --center
+            SpikeAnim(74, 112, 224, 225, 226, 227)        
+            SpikeAnim(74, 113, 240, 241, 242, 243)        
+        for sp = 73, 75 do
+            SpikeAnim(sp, 114, 224, 225, 226, 227)        
+        end
+        for sp = 72, 75 do
+            SpikeAnim(sp, 115, 240, 241, 242, 243)        
+        end
+        for sp = 73, 75 do
+            SpikeAnim(sp, 116, 224, 225, 226, 227)        
+        end
+            SpikeAnim(73, 117, 240, 241, 242, 243)        
+            SpikeAnim(74, 118, 224, 225, 226, 227)        
+    end
+
+    function SpikeLevel2()
+        --line 1
+        for sp = 107, 113 do
+            SpikeAnim(43, sp, 224, 225, 226, 227)        SpikeAnim(44, sp, 224, 225, 226, 227)        SpikeAnim(45, sp, 224, 225, 226, 227)      SpikeAnim(46, sp, 224, 225, 226, 227)
+        end
+        SpikeAnim(45, 105, 224, 225, 226, 227)
+        SpikeAnim(45, 106, 224, 225, 226, 227)
+        SpikeAnim(45, 114, 224, 225, 226, 227)
+    end
+
+    function SpikeLevel3()
+        -- middle
+        for spy = 113, 114 do
+            for spx = 13, 16 do
+                SpikeAnim(spx, spy, 224, 225, 226, 227)        
+            end
+        end
+        for spx = 14, 17 do
+            SpikeAnim(spx, 115, 240, 241, 242, 243)
+        end
+        SpikeAnim(15, 116, 240, 241, 242, 243)
+        SpikeAnim(15, 112, 224, 225, 226, 227)
+        -- right diagonale
+        space = 0
+        o = 0
+        for spy = 105, 112 do
+            for spx = 19, 22 do
+                SpikeAnim(spx+space, spy, 240, 241, 242, 243)
+                o = o+1
+                if o == 4 then
+                    space = space+1
+                    o = 0
+                end 
+            end
+        end
+        SpikeAnim(27, 113, 240, 241, 242, 243)
+        space = 0
+        o = 0
+        -- left diagonale
+        for spy = 114, 118 do
+            for spx = 6+space, 8+space do
+                SpikeAnim(spx, spy, 240, 241, 242, 243)
+                o = o+1
+                if o == 3 then
+                    space = space+1
+                    o = 0
+                end 
+            end
+        end
+        -- low
+        for spy = 113, 114 do
+            for spx = 0, 6 do
+                SpikeAnim(spx, spy, 240, 241, 242, 243)        
+            end
+        end
+        -- up
+        for spx = 8, 9 do
+            SpikeAnim(spx, 105, 240, 241, 242, 243)        
+        end
+        for spx = 7, 11 do
+            SpikeAnim(spx, 106, 224, 225, 226, 227)        
+        end
+        for spx = 6, 11 do
+            SpikeAnim(spx, 107, 240, 241, 242, 243)        
+        end
+        for spx = 7, 11 do
+            SpikeAnim(spx, 108, 224, 225, 226, 227)        
+        end
+        for spx = 8, 9 do
+            SpikeAnim(spx, 109, 240, 241, 242, 243)        
+        end
+    end
+
+    function SpikeWin()
+        -- Y
+        SpikeAnim(180, 120, 224, 225, 226, 227)        SpikeAnim(180, 121, 224, 225, 226, 227)        SpikeAnim(182, 120, 224, 225, 226, 227)
+        SpikeAnim(182, 121, 224, 225, 226, 227)        SpikeAnim(181, 122, 224, 225, 226, 227)        SpikeAnim(181, 123, 224, 225, 226, 227)
+        -- 0
+        SpikeAnim(184, 121, 224, 225, 226, 227)        SpikeAnim(184, 122, 224, 225, 226, 227)        SpikeAnim(185, 120, 224, 225, 226, 227)
+        SpikeAnim(185, 123, 224, 225, 226, 227)        SpikeAnim(186, 121, 224, 225, 226, 227)        SpikeAnim(186, 122, 224, 225, 226, 227)
+        -- U
+        SpikeAnim(188, 120, 224, 225, 226, 227)        SpikeAnim(188, 121, 224, 225, 226, 227)        SpikeAnim(188, 122, 224, 225, 226, 227)
+        SpikeAnim(189, 123, 224, 225, 226, 227)
+        SpikeAnim(190, 120, 224, 225, 226, 227)        SpikeAnim(190, 121, 224, 225, 226, 227)        SpikeAnim(190, 122, 224, 225, 226, 227)
+        -- W
+        SpikeAnim(180, 125, 224, 225, 226, 227)        SpikeAnim(180, 126, 224, 225, 226, 227)        SpikeAnim(180, 127, 224, 225, 226, 227)
+        SpikeAnim(181, 128, 224, 225, 226, 227)        SpikeAnim(182, 127, 224, 225, 226, 227)        SpikeAnim(183, 128, 224, 225, 226, 227)
+        SpikeAnim(184, 125, 224, 225, 226, 227)        SpikeAnim(184, 126, 224, 225, 226, 227)        SpikeAnim(184, 127, 224, 225, 226, 227)
+        -- I
+        SpikeAnim(186, 125, 224, 225, 226, 227)        SpikeAnim(186, 127, 224, 225, 226, 227)        SpikeAnim(186, 128, 224, 225, 226, 227)
+        -- N
+        for spxY = 125, 128 do
+            SpikeAnim(188, spxY, 224, 225, 226, 227)
+        end
+        SpikeAnim(189, 126, 224, 225, 226, 227)        SpikeAnim(190, 127, 224, 225, 226, 227)
+        for spxY = 125, 128 do
+            SpikeAnim(191, spxY, 224, 225, 226, 227)
+        end
+    end
+    
+    function SpikeAnim(spikeX , spikeY, spikeAnim0, spikeAnim1, spikeAnim2, spikeAnim3)        
+        if s >= 60 then
+            mset(spikeX, spikeY, spikeAnim1)
+        end
+        if s >= 63 then
+            mset(spikeX, spikeY, spikeAnim2)
+        end
+        if s >= 66 then
+            mset(spikeX, spikeY, spikeAnim3)
+        end
+        if s >= 120 then
+            mset(spikeX, spikeY, spikeAnim2)
+        end
+        if s >= 123 then
+            mset(spikeX, spikeY, spikeAnim1)
+        end
+        if s >= 126 then
+            mset(spikeX, spikeY, spikeAnim0)
+        end
+    end    
+
+    ------------------------------------ Bullets ----------------------------------
+    function InitObstacle()
+        for ib = 0, 8 do
+            bullet[ib] = {coordX=spaceX*8, coordY=spaceY*8, obstacleSpeed=0, obstacleSprite=0, obstacleRotation=0}
+        end
+    end
+
+    ------------------------------------ Bullets MEDIUM ----------------------------------
+    function InitObstacleMedium(oX0, oY0, oX1, oY1, oX2, oY2, oX3, oY3, oX5, oY5, oX6, oY6, oX7, oY7, oX8, oY8) 
+        for ib = 0, 8 do
+            if ib == 0 then     spaceX = oX0    spaceY = oY0    end
+            if ib == 1 then     spaceX = oX1    spaceY = oY1    end
+            if ib == 2 then     spaceX = oX2    spaceY = oY2    end
+            if ib == 3 then     spaceX = oX3    spaceY = oY3    end
+            if ib == 4 then     spaceX = oX5    spaceY = oY5    end
+            if ib == 5 then     spaceX = oX6    spaceY = oY6    end
+            if ib == 6 then     spaceX = oX7    spaceY = oY7    end
+            if ib == 7 then     spaceX = oX8    spaceY = oY8    end
+        bullet[ib] = {coordX=spaceX*8, coordY=spaceY*8, obstacleSpeed=1, obstacleSprite=322, obstacleRotation=0}
+        end
+    end
+
+    function ObstacleMovementMedium(obX0, obX1, obX2, obX3, obX5, obX6, obX7, obX8)
+        bullet[0].coordY = bullet[0].coordY + 1
+        if bullet[0].coordY >= obX0*8 then -- il ya ecrit obX0, mais le X devrait etre un Y
+            bullet[0].coordY = obY0*8
+        end
+        bullet[1].coordY = bullet[1].coordY - 1
+        if bullet[1].coordY <= obX1*8 then
+            bullet[1].coordY = obY1*8
+        end
+        bullet[2].coordY = bullet[2].coordY + 1
+        if bullet[2].coordY >= obX2*8 then
+            bullet[2].coordY = obY2*8
+        end
+
+        if waitEnough2 == true then
+            bullet[3].coordY = bullet[3].coordY + 1
+        end
+        if bullet[3].coordY >= obX3*8 then
+            waitEnough2 = false
+            waitB = waitB+1
+            if waitB >= 30 then
+                bullet[3].coordY = obY3*8
+                waitEnough2 = true
+                waitB = 0
+            end
+        end
+
+        bullet[4].coordY = bullet[4].coordY + 1
+        if bullet[4].coordY >= obX5*8 then
+            bullet[4].coordY = obY5*8
+        end
+        bullet[5].coordY = bullet[5].coordY + 1
+        if bullet[5].coordY >= obX6*8 then
+            bullet[5].coordY = obY6*8
+        end
+        bullet[6].coordY = bullet[6].coordY + 1
+        if bullet[6].coordY >= obX7*8 then
+            bullet[6].coordY = obY7*8
+        end
+        bullet[7].coordY = bullet[7].coordY + 1
+        if bullet[7].coordY >= obX8*8 then
+            bullet[7].coordY = obY8*8
+        end
+    end
+
+    function BulletMedium()
+        obY0 = 1        obY1 = 14        obY2 = 4
+        obY3 = 8        obY5 = 7         obY6 = 1
+        obY7 = 2        obY8 = 0
+        
+        if initObstacleMedium == true then
+            InitObstacleMedium(8,obY0, 10,obY1, 14,obY2, 19,obY3, 25,obY5, 20,obY6, 23,obY7, 26,obY8)
+            initObstacleMedium = false
+        end
+        
+        for ib = 0, 8 do
+            spr(bullet[ib].obstacleSprite,  bullet[ib].coordX,  bullet[ib].coordY,  0,  1,  0,  bullet[ib].obstacleRotation,  2,  2)
+            -- rotation --
+            r = r+1
+            if r >= 5 then
+                bullet[ib].obstacleRotation = bullet[ib].obstacleRotation-1
+                r = 0
+            end
+        end      
+
+        ObstacleMovementMedium(9, 2, 17, 14, 15, 7, 7, 7)     
+    end
+
+    ------------------------------------ Bullets EASY ----------------------------------
+    function InitObstacleEasy(X0, Y0, X1, Y1, X2, Y2)
+        for ib = 0, 2 do
+            if ib == 0 then     spaceX = X0    spaceY = Y0    end
+            if ib == 1 then     spaceX = X1    spaceY = Y1    end
+            if ib == 2 then     spaceX = X2    spaceY = Y2    end
+        bullet[ib] = {coordX=spaceX*8, coordY=spaceY*8, obstacleSpeed=1, obstacleSprite=322, obstacleRotation=0}
+        end
+    end
+
+    function ObstacleMovementEasy(X0, X1, Y2, X0max, X1max, Y2max)
+        if waitEnough == true then
+            bullet[0].coordX = bullet[0].coordX - 1
+        end
+        if bullet[0].coordX <= X0max*8 then
+            waitEnough = false
+            waitB = waitB+1
+            if waitB >= 30 then
+                bullet[0].coordX = X0*8
+                waitEnough = true
+                waitB = 0
+            end
+        end
+        bullet[1].coordX = bullet[1].coordX + 1
+        if bullet[1].coordX >= X1max*8 then
+            bullet[1].coordX = X1*8
+        end
+        bullet[2].coordY = bullet[2].coordY - 1
+        if bullet[2].coordY <= Y2max*8 then
+            bullet[2].coordY = Y2*8
+        end
+    end
+    function ObstacleMovementEasy2(X0, X1, Y2, X0max, X1max, Y2max)
+        bullet[0].coordX = bullet[0].coordX + 1
+        if bullet[0].coordX >= X0max*8 then
+            bullet[0].coordX = X0*8
+        end
+        bullet[1].coordX = bullet[1].coordX + 1
+        if bullet[1].coordX >= X1max*8 then
+            bullet[1].coordX = X1*8
+        end
+        bullet[2].coordY = bullet[2].coordY + 1
+        if bullet[2].coordY >= Y2max*8 then
+            bullet[2].coordY = Y2*8
+        end
+    end
+
+    function BulletEasy(functionMovement, X0, X1, X2, Y0, Y1, Y2, X0max, X1max, Y2max) -- is it possible to make a function a parameter
+        X0 = X0         X1 = X1          X2 = X2
+        Y0 = Y0         Y1 = Y1          Y2 = Y2
+        
+        if initObstacleEasy == true then
+            InitObstacleEasy(X0, Y0, X1, Y1, X2, Y2)
+            initObstacleEasy = false
+        end
+        
+        for ib = 0, 2 do
+            spr(bullet[ib].obstacleSprite,  bullet[ib].coordX,  bullet[ib].coordY,  0,  1,  0,  bullet[ib].obstacleRotation,  2,  2)
+            -- rotation --
+            r = r+1
+            if r >= 5 then
+                bullet[ib].obstacleRotation = bullet[ib].obstacleRotation-1
+                r = 0
+            end
+        end      
+
+        functionMovement(X0, X1, Y2, X0max, X1max, Y2max)     
+    end
+
+    --------------------------------- Wood ---------------------------------------    
+    function InitWood()
+        for w = 0, 5 do
+            wood[w] = {wood_posX = -20, wood_posY = 7*8, sprite = 262}
+        end
+    end
+
+    function InitWoodEasy()
+        for w = 0, 5 do
+            if w == 0 then      wX = -2*8    wY = 56     end
+            if w == 1 then      wX = 38*8     wY = 40     end
+            if w == 2 then      wX = -12*8     wY = 56     end
+            if w == 3 then      wX = -4*8    wY = 56     end
+            if w == 4 then      wX = 40*8     wY = 40     end
+            if w == 5 then      wX = 50*8     wY = 40     end
+            wood[w] = {wood_posX = wX, wood_posY = wY, sprite = 262}
+        end
+    end
+    function InitWoodMedium()
+        for w = 0, 5 do
+            if w == 0 then      wX = 40*8     wY = 88     end
+            if w == 1 then      wX = -2*8    wY = 40     end
+            if w == 2 then      wX = 40*8     wY = 24     end
+            if w == 3 then      wX = 48*8     wY = 88     end
+            if w == 4 then      wX = -20*8    wY = 40     end
+            if w == 5 then      wX = 42*8     wY = 24     end
+            wood[w] = {wood_posX = wX, wood_posY = wY, sprite = 262}
+        end
+    end
+    
+    function WoodMovementEasy()
+        wood[0].wood_posX = wood[0].wood_posX+1
+        if wood[0].wood_posX >= 30*8 then
+            wood[0].wood_posX = -2*8
+        end
+        wood[1].wood_posX = wood[1].wood_posX-1
+        if wood[1].wood_posX <= -4*8 then
+            wood[1].wood_posX = 30*8
+        end
+        wood[2].wood_posX = wood[2].wood_posX+1
+        if wood[2].wood_posX >= 32*8 then
+            wood[2].wood_posX = -2*8
+        end
+        wood[3].wood_posX = wood[3].wood_posX+1
+        if wood[3].wood_posX >= 30*8 then
+            wood[3].wood_posX = -2*8
+        end
+        wood[4].wood_posX = wood[4].wood_posX-1
+        if wood[4].wood_posX <= -2*8 then
+            wood[4].wood_posX = 32*8
+        end
+        wood[5].wood_posX = wood[5].wood_posX-1
+        if wood[5].wood_posX <= -2*8 then
+            wood[5].wood_posX = 32*8
+        end
+    end
+    function WoodMovementMedium()
+        wood[0].wood_posX = wood[0].wood_posX-1
+        if wood[0].wood_posX <= -4*8 then
+            wood[0].wood_posX = 30*8
+        end
+        wood[1].wood_posX = wood[1].wood_posX+1
+        if wood[1].wood_posX >= 32*8 then
+            wood[1].wood_posX = -2*8
+        end
+        wood[2].wood_posX = wood[2].wood_posX-1
+        if wood[2].wood_posX <= -4*8 then
+            wood[2].wood_posX = 30*8
+        end
+        wood[3].wood_posX = wood[3].wood_posX-1
+        if wood[3].wood_posX <= -2*8 then
+            wood[3].wood_posX = 32*8
+        end
+        wood[4].wood_posX = wood[4].wood_posX+1
+        if wood[4].wood_posX >= 30*8 then
+            wood[4].wood_posX = -4*8
+        end
+        wood[5].wood_posX = wood[5].wood_posX-1
+        if wood[5].wood_posX <= -2*8 then
+            wood[5].wood_posX = 32*8
+        end
+    end
+
+    function Wood()
+        
+        if initWoodEasy == true then
+            InitWoodEasy()
+            initWoodEasy = false
+        end
+
+        for w = 0, 5 do
+            spr(wood[w].sprite, wood[w].wood_posX, wood[w].wood_posY, 0, 1, 0, 0, 2, 2)
+        end
+
+        WoodMovementEasy()
+
+        --loop to be on wood or loose if not (*5 because of uncapability of changing bool)
+        if isOn3 == false then
+        for w = 0, 0 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x+1     isSafe0 = true   isOn0 = true
+                else isSafe0 = false    isOn0 = false
+            end
+        end end
+        if isOn4 == false then
+        for w = 1, 1 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe1 = true   isOn1 = true
+                else isSafe1 = false    isOn1 = false
+            end
+        end end
+        for w = 2, 2 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x+1     isSafe2 = true
+                else isSafe2 = false
+            end
+        end
+        if isOn0 == false then
+        for w = 3, 3 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x+1     isSafe3 = true   isOn3 = true
+                else isSafe3 = false    isOn3 = false
+            end
+        end end
+        if isOn1 == false then
+        for w = 4, 4 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe4 = true   isOn4 = true
+                else isSafe4 = false    isOn4 = false
+            end
+        end end
+        for w = 5, 5 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe5 = true
+                else isSafe5 = false
+            end
+        end
+
+        if isSafe0 == false and isSafe1 == false and isSafe2 == false and isSafe3 == false and isSafe4 == false and isSafe5 == false and fget(mget(move_x/8, move_y/8), 3)==true
+        or isSafe0 == false and isSafe1 == false and isSafe2 == false and isSafe3 == false and isSafe4 == false and isSafe5 == false and fget(mget(move_x4/8, move_y4/8), 3)==true then
+            CollideWater()
+        end
+    end
+
+    function WoodMedium()
+        
+        if initWoodMedium == true then
+            InitWoodMedium()
+            initWoodMedium = false
+        end
+
+        for w = 0, 5 do
+            spr(wood[w].sprite, wood[w].wood_posX, wood[w].wood_posY, 0, 1, 0, 0, 2, 2)
+        end
+
+        WoodMovementMedium()
+
+        for w = 0, 0 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe0 = true
+                else isSafe0 = false
+            end
+        end
+        for w = 1, 1 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x+1     isSafe1 = true
+                else isSafe1 = false
+            end
+        end
+        if isOn5 == false then
+        for w = 2, 2 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe2 = true   isOn2 = true
+                else isSafe2 = false    isOn2 = false
+            end
+        end end
+        for w = 3, 3 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe3 = true
+                else isSafe3 = false
+            end
+        end
+        for w = 4, 4 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x+1     isSafe4 = true
+                else isSafe4 = false
+            end
+        end
+        if isOn2 == false then
+        for w = 5, 5 do
+            if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+            or
+                move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+                move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+                move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+            or
+                move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+                move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+                then move_x = move_x-1     isSafe5 = true   isOn5 = true
+                else isSafe5 = false    isOn5 = false
+            end
+        end end
+
+        if isSafe0 == false and isSafe1 == false and isSafe2 == false and isSafe3 == false and isSafe4 == false and isSafe5 == false and fget(mget(move_x/8, move_y/8), 3)==true
+        or isSafe0 == false and isSafe1 == false and isSafe2 == false and isSafe3 == false and isSafe4 == false and isSafe5 == false and fget(mget(move_x4/8, move_y4/8), 3)==true then
+            CollideWater()
+        end
+    end
+
+    -- if one twelfth of second on water then hit
+    function CollideWater()
+        c = c+1
+        if c >= 5 then
+            LittleFunctionHit()
+            c = 0
+        end
+    end
+    -- if on floor then time on water reset 
+    function CollideFloor()
+        if fget(mget(move_x/8, move_y/8), 5)==true or fget(mget(move_x4/8, move_y4/8), 5)==true then
+            c = 0
+        end
+    end
+
+    -- function OnWood(wNumber, a,  oneOr_one) -- wNumber = 2 -- isSafe3 -- -1
+    --     for w = wNumber, wNumber do
+    --         if  move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+    --             move_y >= wood[w].wood_posY+levelTileY          and move_y <= wood[w].wood_posY+levelTileY+16-1
+    --         or
+    --             move_x >= wood[w].wood_posX+levelTileX          and move_x <= wood[w].wood_posX+levelTileX+16-1 and
+    --             move_y+0.5*8 >=  wood[w].wood_posY+levelTileY+1 and move_y+0.5*8 <= wood[w].wood_posY+levelTileY+16
+    --         or
+    --             move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and
+    --             move_y4-0.5*8 >=  wood[w].wood_posY+levelTileY  and move_y4-0.5*8 <= wood[w].wood_posY+levelTileY+16-2
+    --         or
+    --             move_x4 >= wood[w].wood_posX+levelTileX         and move_x4 <= wood[w].wood_posX+levelTileX+16  and 
+    --             move_y4 >= wood[w].wood_posY+levelTileY         and move_y4 <= wood[w].wood_posY+levelTileY+16
+
+    --             then move_x = move_x+oneOr_one     a = true
+    --             else a = false
+    --         end
+    --     end
+    -- end
+
+    -- function Test(aa)
+    --     local aa = aa or true
+    -- end
+
+    ----------------------------------- Level Initialize ------------------------------------
+    function LevelParameters(l, x, y, lx, ly, cl)
+        if levelChange == l and levelImmediateChange == true then
+            move_x = (x)*8+1
+            move_y = (y)*8+12
+            init_posX = (x)*8+1
+            init_posXY = (y)*8+12
+            levelTileX = (lx)*8
+            levelTileY = (ly)*8
+            
+            level = l
+            classicLevel = cl
+            levelImmediateChange = false
+        end
+    end
+    function LevelBulletsMediumParameters(l, x, y, lx, ly, cl)
+        if levelChange == l and levelImmediateChange == true then
+            move_x = (x)*8+1
+            move_y = (y)*8+12
+            init_posX = (x)*8+1
+            init_posXY = (y)*8+12
+            levelTileX = (lx)*8
+            levelTileY = (ly)*8
+
+            initObstacleMedium = true            
+            level = l
+            classicLevel = cl
+            levelImmediateChange = false
+        end
+    end
+    function LevelBulletsEasyParameters(l, x, y, lx, ly, cl)
+        if levelChange == l and levelImmediateChange == true then
+            move_x = (x)*8+1
+            move_y = (y)*8+12
+            init_posX = (x)*8+1
+            init_posXY = (y)*8+12
+            levelTileX = (lx)*8
+            levelTileY = (ly)*8
+
+            initObstacleEasy = true
+            level = l
+            classicLevel = cl
+            levelImmediateChange = false
+        end
+    end
+        
+    function LevelInitialize()
+         -- Menu
+        LevelParameters             (100,   14+30*7,   9+17*4,     30*7,   17*4,   true)
+         -- level 0
+        LevelParameters             (0,     14,        12,         0,      0,      false)
+        -- level 1
+        LevelBulletsEasyParameters  (1,     26+30*2,   12+17*6,    30*2,   17*6,   true)
+        -- level 2
+        LevelParameters             (2,     5+30,      9+17*6,     30,     17*6,   true)
+        -- level 3
+        LevelBulletsEasyParameters  (3,     3,         14+17*6,    0,      17*6,   true)
+        -- level 4
+        LevelBulletsMediumParameters(4,     1+30,      8,          30,     0,      true)
+        -- level 5
+        LevelParameters             (5,     7+30*6,    15+17*4,    180,    17*4,   true)
+         -- level 6
+        LevelParameters             (6,     17+30*6,   15+17*2,    180,    17*2,   true)
+         -- Succeed
+        LevelParameters             (7,     15+30*6,   5+17*7,     180,    17*7,   true)
+        --game over
+        if gameOverMan == true then
+            move_x = (14+30*7)*8+1 -- (position en px + nombre de tiles par mondes * nombre de mondes) * 8 pour convertir en tiles, + dimension du perso (1 ou 12)
+            move_y = (8+17*7)*8+12
+            init_posX = (14+30*7)*8+1 -- position initiale utilisee par la camera (qui soustrait cette position a la position du joueur)
+            init_posXY = (8+17*7)*8+12
+            levelTileX = 210*8 -- number of tiles from coordonate 0, * 8 to convert into tiles
+            levelTileY = 119*8
+            gameOverMan = false
+    
+            showHP = false
+            level = 50
+            -- level = 0 -- 50 puis 0 ? peut etre une erreur, peut etre pour ne pas rester dans le game over...
+            classicLevel = true -- bool to check if camera should follow the player or not
+        end
+
+        if levelChange == 7 and fScore == true then
+            score = score+500
+            fScore = false
+        end
+    end
+
+    ------------------------------- Level During Game ------------------------------------
+    function ActualLevel()
+        if level == 0 then
+            isScore = true
+            canMoveHorizontal = true
+        end
+        if level == 1 then
+            BulletEasy(ObstacleMovementEasy, 22, 1, 13, 7, 5, 17, 13, 12, 6)
+        end
+        if level == 3 then
+            BulletEasy(ObstacleMovementEasy2, 4, 12, 20, 4, 9, 1, 30, 30, 15)
+        end
+        if level == 4 then
+            BulletMedium()
+        end 
+        if level == 5 then
+            Wood()
+            CollideFloor()
+            -- if isBonusHealth == true then
+            --     health = health+5
+            --     isBonusHealth = false
+            -- end
+        end
+        if level == 6 then
+            WoodMedium()
+            CollideFloor()
+        end
+
+        -- to be sure not having collisions in the wrong levels
+        if level == 4 then
+            isObstacleMediumCollide = true
+        else
+            isObstacleMediumCollide = false
+        end
+
+        if level == 1 or level == 3 then
+            isObstacleEasyCollide = true
+        else
+            isObstacleEasyCollide = false
+        end
+    end
+
+    ------------------------------------- Every frames -------------------------------------------
+    function Init()
+    end
+
+    function TIC()
+        cls()
+        if initAll == true then
+            InitObstacle()
+            InitWood()
+            initAll = false
+        end
+        
+        move_x4 = move_x+13
+        move_y4 = move_y+3
+
+        if health <= 0 then
+            gameOverMan = true
+        end
+
+        TenTimes()
+        AnimFront()
+        LevelInitialize()
+        Spike()     SpikeLevel1()   SpikeLevel2()   SpikeLevel3()   SpikeWin()
+        Hit()
+        Collide(1, 3, 13)
+        CollideStart(2, 3, 13)
+        ActualLevel()
+        TimerHealth()
+        
+        vbank(1)
+        map(0, 0, 239, 135, -camera_x, -camera_y, 0)
+
+        Boost()
+        
+        if classicLevel == true then
+            camera_x = levelTileX
+            camera_y = levelTileY
+            spr(anim, move_x-levelTileX-1, move_y-levelTileY-12, 0, 1, miror, 0, 2, 2) -- replace anim by 258 for collision test
+            -- move_x-levelTileX-1 == player pose - level tiles to see player, but only in the screen of the function spr(), -1 beaucause of player hitbox
+        end
+        if classicLevel == false then
+            camera_x = levelTileX + move_x - init_posX -- tiles du level + position du joueur - init pos (result = 0 if no movement)
+            camera_y = levelTileY + move_y - init_posXY
+            spr(anim, image_posX, image_posY, 0, 1, miror, 0, 2, 2)
+        end
+
+
+        -------------- condition here for the text to be above the player and the map -----------
+        if showHP == true then
+            print("HP ", 0, 2, 22)
+            print(health, 15, 2, 20)
+        end
+
+        print(score, score_posX, score_posY, scoreColor)
+        if score < 1000 then 
+            scoreMinus = -5
+        end
+        print("pts", 23+score_posX+scoreMinus, score_posY)
+
+        if isScore == true then
+            sc = sc+1
+            if sc >= 60*5 then
+                score = score-10
+                sc = 0
+            end
+        end
+
+        ts = ts+1
+        if ts >= 50 then
+            titleShow = false
+        end
+        if level == 100 then
+            if titleShow == true then
+                print("THIEF ESCAPE", 83, 58, 20, false, 1.8)
+                spr(236, 152, 48, 0, 1, 0, 0, 2, 2)
+            end
+            print("Inventory", 165, 11, 14)
+            spr(270, 220, 5, 0, 1, 0, 0, 2, 2)
+            print("Use arrows", 0, 118, 14)
+            print("to move", 9, 125, 14)
+        end
+
+        if isSecret == true and mget(move_x/8, move_y/8)==208 then
+            p = p+1
+            if p<=70 then
+                print("secret discovered", 85, 40, 11)
+            end
+            if p>70 then
+                isSecret = false
+            end
+        end
+
+        if level == 2 then
+            print("press x", 50, 55, 11)
+        end
+        if level == 7 then
+            canMoveHorizontal = false
+            isScore = false
+            score_posX = 183
+            score_posY = 40
+            scoreColor = 11
+            if mget(move_x/8, move_y/8)==78 or mget(move_x4/8, move_y4/8)==78 then
+                fString = true
+            end
+        end
+        if fString == true then
+            print("press x to go", 85, 40, 20)
+            print("back to menu", 85, 48, 20)
+            if keyp(24) then
+                reset()
+            end
+        end
+
+        if level == 50 then
+            isScore = false
+            score_posX = 100
+            score_posY = 20
+            scoreColor = 11
+            print("press x to go", 85, 40, 14)
+            print("back to menu", 85, 48, 14)
+            if keyp(24) then
+                reset()
+            end
+        end
+    end
